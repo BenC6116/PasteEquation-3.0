@@ -5,11 +5,35 @@ using Microsoft.Office.Interop.Word;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Word = Microsoft.Office.Interop.Word;
 
 namespace PasteEquation
 {
     class WordFunctions
     {
+        // Count existing inline equations in the current document
+        private static int CountExistingEquations(Word.Document doc)
+        {
+            int n = 0;
+            try
+            {
+                foreach (Word.InlineShape iSh in doc.InlineShapes)
+                {
+                    if (iSh.OLEFormat != null)
+                    {
+                        string progId = iSh.OLEFormat.ProgID;
+                        if (progId == "Equation.3" || progId == "Word.Equation.8") n++;
+                    }
+                }
+            }
+            catch
+            {
+                // If we can't count equations, assume moderate load
+                return 50;
+            }
+            return n;
+        }
+
         private static void Paste(string input)
         {
             Clipboard.SetText(input);
@@ -31,22 +55,32 @@ namespace PasteEquation
 
             returnArr.RemoveAll(string.IsNullOrEmpty);
             
-            /* ▸▸▸  NEW THROTTLED PASTE LOOP  ◂◂◂ */
-            const int CHUNK_SIZE = 10;                 // paste 10 items, pause, repeat
-            int counter = 0;
+            // ── adaptive throttling ────────────────────────────────
+            Word.Application app = Globals.Main.Application;
+            int existingEq = CountExistingEquations(app.ActiveDocument);
 
+            int CHUNK  = existingEq > 200 ? 3  :
+                         existingEq > 100 ? 5  : 10;   // smaller chunks in huge docs
+            int DELAY  = existingEq > 200 ? 400 :
+                         existingEq > 100 ? 250 : 150; // ms pause between chunks
+
+            bool oldUpd = app.ScreenUpdating;
+            app.ScreenUpdating = false;
+
+            int counter = 0;
             for (int i = returnArr.Count - 1; i >= 0; i--)
             {
                 Paste(returnArr[i]);
-                counter++;
-
-                if (counter >= CHUNK_SIZE)
+                if (++counter >= CHUNK)
                 {
-                    System.Threading.Thread.Sleep(200); // give Word's OMML engine air
+                    System.Threading.Thread.Sleep(DELAY);
+                    System.Windows.Forms.Application.DoEvents();
                     counter = 0;
                 }
             }
-            /* ▸▸▸  END NEW LOOP  ◂◂◂ */
+
+            app.ScreenUpdating = oldUpd;
+            // ────────────────────────────────────────────────────────
             
             return true;
         }
