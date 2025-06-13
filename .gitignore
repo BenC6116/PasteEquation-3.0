@@ -1,0 +1,33 @@
+# Build Outputs
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.pidb
+*.userprefs
+*.sln.docstates
+
+# Certificate files (keep for build, but exclude from source control for security)
+*.pfx
+
+# VS Code
+.vscode/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# Release packages (we'll commit setup.zip specifically)
+# *.zip
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Office temp files
+~$*
+
+# Include specific release files
+!setup.zip
