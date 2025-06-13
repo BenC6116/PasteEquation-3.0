@@ -48,19 +48,21 @@ namespace PasteEquation
                 try { Clipboard.Clear(); } catch { }
                 throw; // Re-throw so higher level can handle
             }
-        }
-
-        private static bool SplitAndPaste(string input)
+        }        private static bool SplitAndPaste(string input)
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine($"SplitAndPaste: Input length = {input.Length} chars");
+                
                 // For extremely large content, split into smaller chunks first
-                if (input.Length > 50000)
+                // Increase threshold to be more conservative about chunking
+                if (input.Length > 100000)  // Increased from 50000
                 {
                     System.Diagnostics.Debug.WriteLine($"Large content detected ({input.Length} chars), using pre-chunking");
                     return ProcessLargeContent(input);
                 }
 
+                System.Diagnostics.Debug.WriteLine("Using normal content processing");
                 return ProcessNormalContent(input);
             }
             catch (Exception ex)
@@ -68,9 +70,7 @@ namespace PasteEquation
                 System.Diagnostics.Debug.WriteLine($"SplitAndPaste error: {ex.Message}");
                 return false;
             }
-        }
-
-        // Handle extremely large content by splitting it first
+        }// Handle extremely large content by splitting it first
         private static bool ProcessLargeContent(string input)
         {
             try
@@ -85,7 +85,9 @@ namespace PasteEquation
                 {
                     System.Diagnostics.Debug.WriteLine($"Processing chunk {i + 1}/{chunks.Count}");
                     
-                    if (!ProcessNormalContent(chunks[i]))
+                    // For chunked content, we need to process without the space setup/cleanup
+                    // that's handled by the main PasteEquation method
+                    if (!ProcessNormalContentRaw(chunks[i]))
                     {
                         success = false;
                     }
@@ -148,12 +150,14 @@ namespace PasteEquation
                 chunks.Add(currentChunk);
             }
             
-            return chunks;        }
-
-        // Original processing logic with enhanced safety
+            return chunks;        }        // Original processing logic with enhanced safety
         private static bool ProcessNormalContent(string input)
         {
-            input = " " + input;
+            // Add space prefix for normal processing (this gets removed by PasteEquation)
+            return ProcessNormalContentRaw(" " + input);
+        }        // Raw processing without space prefix (used for chunked content)
+        private static bool ProcessNormalContentRaw(string input)
+        {
             Regex mathRegex = new Regex(@"<math [\S\s]*?>[\S\s]*?<\/math>");
 
             string[] arr1 = mathRegex.Split(input);
@@ -196,13 +200,14 @@ namespace PasteEquation
             System.Diagnostics.Debug.WriteLine($"Paste strategy: {existingEq} existing, {incomingEq} incoming, {contentLength} chars → chunk={CHUNK}, delay={DELAY}ms");
 
             bool oldUpd = app.ScreenUpdating;
-            app.ScreenUpdating = false;
-
-            try
+            app.ScreenUpdating = false;            try
             {
+                System.Diagnostics.Debug.WriteLine($"ProcessNormalContentRaw: Processing {returnArr.Count} items");
+                
                 int counter = 0;
                 for (int i = returnArr.Count - 1; i >= 0; i--)
                 {
+                    System.Diagnostics.Debug.WriteLine($"Pasting item {returnArr.Count - i}/{returnArr.Count}: '{returnArr[i].Substring(0, Math.Min(50, returnArr[i].Length))}...'");
                     Paste(returnArr[i]);
                     counter++;
 
@@ -212,12 +217,14 @@ namespace PasteEquation
 
                     if (counter >= CHUNK)
                     {
+                        System.Diagnostics.Debug.WriteLine($"Chunk boundary reached ({counter}/{CHUNK}), pausing {DELAY}ms");
                         System.Threading.Thread.Sleep(DELAY);
                         System.Windows.Forms.Application.DoEvents();
                         counter = 0;
                     }
                 }
                 
+                System.Diagnostics.Debug.WriteLine("ProcessNormalContentRaw: All items processed successfully");
                 return true;
             }
             finally
