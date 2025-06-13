@@ -14,7 +14,7 @@ This is an **improved version** of the original [PasteEquation by Foxxey](https:
 This Microsoft Word add-in allows you to paste multiline text with equations from ChatGPT directly into MS Word on Windows. The equations are automatically converted to proper Word equation format.
 
 **Original Project**: [PasteEquation by Foxxey](https://github.com/Foxxey/PasteEquation)  
-**Related Project**: [CopyEquation](https://github.com/Foxxey/CopyEquation) - Browser extension for copying from ChatGPT
+**Related Project**: [CopyEquation (Improved Version)](https://github.com/BenC6116/CopyEquation) - Browser extension for copying from ChatGPT
 
 ## 📦 Installation
 
@@ -26,7 +26,7 @@ This Microsoft Word add-in allows you to paste multiline text with equations fro
 
 ## 🚀 How It Works
 
-1. Copy text with equations from ChatGPT (use the [CopyEquation browser extension](https://github.com/Foxxey/CopyEquation))
+1. Copy text with equations from ChatGPT (use the [CopyEquation browser extension](https://github.com/BenC6116/CopyEquation))
 2. Place cursor in Word document
 3. Press **Ctrl+V** to paste
 4. Equations are automatically converted to Word's native equation format
