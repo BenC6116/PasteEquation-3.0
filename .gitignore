@@ -19,6 +19,10 @@ obj/
 *.tmp
 *.temp
 
+# Development/utility files
+copy_project_contents.ps1
+project_contents.txt
+
 # Release packages (we'll commit setup.zip specifically)
 # *.zip
 
